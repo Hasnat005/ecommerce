@@ -2,14 +2,113 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Send, MessageSquare, Sparkles } from "lucide-react";
+import { X, Send, MessageSquare, Sparkles, Play, Loader2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type Product = {
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+};
 
 type Message = {
   id: string;
   role: "user" | "bot";
   content: string;
-  type?: "text" | "product";
+  type?: "text" | "sql-preview" | "product-grid";
+  data?: any;
+};
+
+const SQLPreview = ({ query }: { query: string }) => {
+  const [isRunning, setIsRunning] = useState(false);
+  const [hasRun, setHasRun] = useState(false);
+
+  const handleRun = () => {
+    setIsRunning(true);
+    setTimeout(() => {
+      setIsRunning(false);
+      setHasRun(true);
+    }, 1500);
+  };
+
+  return (
+    <div className="mt-2 w-full max-w-xs bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
+      <div className="bg-gray-800 px-3 py-1 flex items-center justify-between">
+        <span className="text-xs text-gray-400 font-mono">SQL Query</span>
+        <div className="flex gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-red-500" />
+          <div className="w-2 h-2 rounded-full bg-yellow-500" />
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+        </div>
+      </div>
+      <div className="p-3 font-mono text-xs text-green-400 overflow-x-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {query}
+        </motion.div>
+      </div>
+      <div className="bg-gray-800/50 p-2 flex justify-end border-t border-gray-800">
+        <button
+          onClick={handleRun}
+          disabled={isRunning || hasRun}
+          className={cn(
+            "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-all",
+            hasRun
+              ? "bg-green-500/10 text-green-500 cursor-default"
+              : "bg-indigo-600 hover:bg-indigo-500 text-white"
+          )}
+        >
+          {isRunning ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : hasRun ? (
+            <span>Executed</span>
+          ) : (
+            <>
+              <Play className="w-3 h-3" />
+              Run Query
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ProductCarousel = ({ products }: { products: Product[] }) => {
+  return (
+    <div className="mt-3 -mx-2 overflow-x-auto pb-2 px-2 flex gap-3 scrollbar-hide">
+      {products.map((product, index) => (
+        <motion.div
+          key={product.id}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="flex-shrink-0 w-32 bg-white rounded-lg border border-gray-100 overflow-hidden cursor-pointer group"
+          whileHover={{ scale: 1.05, y: -5 }}
+        >
+          <div className="h-24 bg-gray-100 relative overflow-hidden">
+            {/* Placeholder for image */}
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+            <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-xs">
+              Product Img
+            </div>
+          </div>
+          <div className="p-2">
+            <h4 className="text-xs font-medium text-gray-900 truncate">
+              {product.name}
+            </h4>
+            <p className="text-xs text-indigo-600 font-semibold mt-0.5">
+              {product.price}
+            </p>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
 };
 
 export default function ChatWidget() {
@@ -18,7 +117,8 @@ export default function ChatWidget() {
     {
       id: "1",
       role: "bot",
-      content: "Hello! I'm your AI shopping assistant. How can I help you find the perfect item today?",
+      content: "Hello! I'm your AI shopping assistant. Try asking for 'latest sneakers' or 'show sql'.",
+      type: "text",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -41,19 +141,48 @@ export default function ChatWidget() {
       id: Date.now().toString(),
       role: "user",
       content: inputValue,
+      type: "text",
     };
 
     setMessages((prev) => [...prev, newMessage]);
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response
+    // Simulate AI response based on input
     setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "bot",
-        content: "I'm looking into that for you. This is a demo response.",
-      };
+      let botResponse: Message;
+      const lowerInput = newMessage.content.toLowerCase();
+
+      if (lowerInput.includes("sql")) {
+        botResponse = {
+          id: (Date.now() + 1).toString(),
+          role: "bot",
+          content: "Here is the SQL query to fetch the latest products:",
+          type: "sql-preview",
+          data: "SELECT * FROM products\nWHERE category = 'sneakers'\nORDER BY created_at DESC\nLIMIT 5;",
+        };
+      } else if (lowerInput.includes("sneakers") || lowerInput.includes("products")) {
+        botResponse = {
+          id: (Date.now() + 1).toString(),
+          role: "bot",
+          content: "I found these top-rated sneakers for you:",
+          type: "product-grid",
+          data: [
+            { id: "1", name: "Air Max 90", price: "$120", image: "/placeholder" },
+            { id: "2", name: "Ultra Boost", price: "$180", image: "/placeholder" },
+            { id: "3", name: "Jordan 1", price: "$170", image: "/placeholder" },
+            { id: "4", name: "Yeezy 350", price: "$220", image: "/placeholder" },
+          ],
+        };
+      } else {
+        botResponse = {
+          id: (Date.now() + 1).toString(),
+          role: "bot",
+          content: "I can help you find products or show you the underlying SQL queries. Try asking for 'sneakers'!",
+          type: "text",
+        };
+      }
+
       setMessages((prev) => [...prev, botResponse]);
       setIsTyping(false);
     }, 1500);
@@ -127,13 +256,19 @@ export default function ChatWidget() {
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm",
+                      "max-w-[85%] p-3 rounded-2xl text-sm leading-relaxed shadow-sm",
                       msg.role === "user"
                         ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-none"
                         : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                     )}
                   >
-                    {msg.content}
+                    <p>{msg.content}</p>
+                    {msg.type === "sql-preview" && msg.data && (
+                      <SQLPreview query={msg.data} />
+                    )}
+                    {msg.type === "product-grid" && msg.data && (
+                      <ProductCarousel products={msg.data} />
+                    )}
                   </div>
                 </motion.div>
               ))}
