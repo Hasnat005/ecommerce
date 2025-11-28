@@ -1,14 +1,4 @@
-export interface Product {
-  id: string;
-  name: string;
-  price: string;
-  description?: string;
-  image: string;
-  category: string;
-  rating?: number;
-  reviews?: number;
-  features?: string[];
-}
+import { Product } from "@/types";
 
 export interface ChatMessage {
   role: "user" | "bot" | "system";

@@ -1,21 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
-import { cn } from "@/lib/utils";
 
 export default function CartSheet() {
   const { items, isOpen, closeCart, removeItem, updateQuantity } = useCartStore();
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Prevent hydration mismatch
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) return null;
 
   const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 

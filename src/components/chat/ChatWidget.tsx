@@ -1,24 +1,34 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Send, MessageSquare, Sparkles, Play, Loader2, ChevronRight } from "lucide-react";
+import { X, Send, MessageSquare, Sparkles, Play, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/store/useCartStore";
+import { Product } from "@/types";
 
-type Product = {
-  id: string;
-  name: string;
-  price: string;
-  image: string;
-};
-
-type Message = {
+type BaseMessage = {
   id: string;
   role: "user" | "bot";
   content: string;
-  type?: "text" | "sql-preview" | "product-grid";
-  data?: any;
 };
+
+type TextMessage = BaseMessage & {
+  type?: "text";
+  data?: undefined;
+};
+
+type SqlPreviewMessage = BaseMessage & {
+  type: "sql-preview";
+  data: string;
+};
+
+type ProductGridMessage = BaseMessage & {
+  type: "product-grid";
+  data: Product[];
+};
+
+type Message = TextMessage | SqlPreviewMessage | ProductGridMessage;
 
 const SQLPreview = ({ query }: { query: string }) => {
   const [isRunning, setIsRunning] = useState(false);
@@ -79,6 +89,8 @@ const SQLPreview = ({ query }: { query: string }) => {
 };
 
 const ProductCarousel = ({ products }: { products: Product[] }) => {
+  const addItem = useCartStore((state) => state.addItem);
+
   return (
     <div className="mt-3 -mx-2 overflow-x-auto pb-2 px-2 flex gap-3 scrollbar-hide">
       {products.map((product, index) => (
@@ -89,6 +101,18 @@ const ProductCarousel = ({ products }: { products: Product[] }) => {
           transition={{ delay: index * 0.1 }}
           className="flex-shrink-0 w-32 bg-white rounded-lg border border-gray-100 overflow-hidden cursor-pointer group"
           whileHover={{ scale: 1.05, y: -5 }}
+          onClick={() => {
+            const price = typeof product.price === 'string' 
+              ? parseFloat(product.price.replace(/[^0-9.]/g, "")) 
+              : product.price;
+              
+            addItem({
+              id: product.id,
+              name: product.name,
+              price: price,
+              image: product.image,
+            });
+          }}
         >
           <div className="h-24 bg-gray-100 relative overflow-hidden">
             {/* Placeholder for image */}

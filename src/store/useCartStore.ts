@@ -1,13 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  quantity: number;
-}
+import { CartItem } from "@/types";
 
 interface CartState {
   items: CartItem[];
@@ -35,14 +28,15 @@ export const useCartStore = create<CartState>()(
               items: state.items.map((i) =>
                 i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
               ),
-              isOpen: true, // Open cart when adding item
+              isOpen: true,
             };
           }
           return {
             items: [...state.items, { ...item, quantity: 1 }],
-            isOpen: true, // Open cart when adding item
+            isOpen: true,
           };
         }),
+
 
       removeItem: (id) =>
         set((state) => ({

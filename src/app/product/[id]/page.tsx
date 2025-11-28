@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ShoppingBag, Star, Share2, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/store/useCartStore";
+import { Product } from "@/types";
 
 // Mock Data
-const PRODUCT = {
+const PRODUCT: Product = {
   id: "1",
   name: "Premium Wireless Headphones",
   price: "$299.00",
@@ -26,16 +28,30 @@ const PRODUCT = {
     "Bluetooth 5.0",
     "USB-C Fast Charging",
   ],
+  image: "/placeholder-1", // Add main image for compatibility
+  category: "Electronics"
 };
 
 const TABS = ["Details", "Reviews", "AI Analysis"];
 
 export default function ProductPage({ params }: { params: { id: string } }) {
+  const product = useMemo(() => ({ ...PRODUCT, id: params.id }), [params.id]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState("Details");
   const [isAdded, setIsAdded] = useState(false);
+  const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = () => {
+    const price = typeof product.price === "string"
+      ? parseFloat(product.price.replace(/[^0-9.]/g, ""))
+      : product.price;
+
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: price,
+      image: product.images?.[0] || product.image,
+    });
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
@@ -65,7 +81,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             </button>
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {PRODUCT.images.map((_, index) => (
+            {(product.images || []).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -94,25 +110,25 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     key={i}
                     className={cn(
                       "w-4 h-4",
-                      i < Math.floor(PRODUCT.rating) ? "fill-current" : "text-gray-300"
+                      i < Math.floor(product.rating || 0) ? "fill-current" : "text-gray-300"
                     )}
                   />
                 ))}
               </div>
               <span className="text-sm text-gray-500">
-                ({PRODUCT.reviews} reviews)
+                ({product.reviews} reviews)
               </span>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              {PRODUCT.name}
+              {product.name}
             </h1>
             <p className="text-2xl font-medium text-indigo-600">
-              {PRODUCT.price}
+              {product.price}
             </p>
           </div>
 
           <p className="text-gray-600 leading-relaxed mb-8">
-            {PRODUCT.description}
+            {product.description}
           </p>
 
           <div className="flex gap-4 mb-8">
@@ -196,7 +212,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 >
                   {activeTab === "Details" && (
                     <ul className="space-y-2">
-                      {PRODUCT.features.map((feature, i) => (
+                      {(product.features || []).map((feature, i) => (
                         <li key={i} className="flex items-center gap-2 text-gray-600">
                           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                           {feature}
