@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
+import { useCartStore } from "@/store/useCartStore";
 
 interface Product {
   id: string;
@@ -12,6 +13,19 @@ interface Product {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
+  const addItem = useCartStore((state) => state.addItem);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: parseFloat(product.price.replace("$", "")),
+      image: product.image,
+    });
+  };
+
   return (
     <motion.div
       className="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm"
@@ -36,6 +50,7 @@ export default function ProductCard({ product }: { product: Product }) {
           className="absolute bottom-3 right-3 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-gray-900 z-10"
           whileHover={{ scale: 1.1, backgroundColor: "#000", color: "#fff" }}
           whileTap={{ scale: 0.9, rotate: 90 }}
+          onClick={handleAddToCart}
         >
           <Plus className="w-5 h-5" />
         </motion.button>

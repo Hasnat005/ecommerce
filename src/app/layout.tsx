@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ChatWidget from "@/components/chat/ChatWidget";
+import CartSheet from "@/components/cart/CartSheet";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-grow pt-20">{children}</main>
         <ChatWidget />
+        <CartSheet />
         <Footer />
       </body>
     </html>

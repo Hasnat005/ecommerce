@@ -5,10 +5,12 @@ import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { ShoppingCart, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/store/useCartStore";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { scrollY } = useScroll();
+  const { toggleCart, items } = useCartStore();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     if (latest > 50) {
@@ -92,11 +94,21 @@ const Navbar = () => {
 
           {/* Cart Icon */}
           <motion.button
-            className="p-2 rounded-full hover:bg-gray-100 text-gray-700"
+            className="p-2 rounded-full hover:bg-gray-100 text-gray-700 relative"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            onClick={toggleCart}
           >
             <ShoppingCart className="w-5 h-5" />
+            {items.length > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center"
+              >
+                {items.length}
+              </motion.span>
+            )}
           </motion.button>
 
           {/* Profile Icon */}
